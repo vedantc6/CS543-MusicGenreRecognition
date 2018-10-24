@@ -8,10 +8,12 @@ import seaborn as sns
 sns.set()
 
 DATA_DIR = os.getcwd() + "/Desktop/Projects/CS543-MusicGenreRecognition/Data/fma_metadata/"
+IMG_DIR = os.getcwd() + "/Desktop/Projects/CS543-MusicGenreRecognition/Images/"
 
 #%%
 genres_df = pd.read_csv(DATA_DIR + "genres.csv", encoding="latin-1", index_col=0) 
 print(genres_df.head())
+
 #%%
 tracks_df = pd.read_csv(DATA_DIR + "tracks.csv", encoding="Latin-1")
 
@@ -19,40 +21,78 @@ tracks_df = pd.read_csv(DATA_DIR + "tracks.csv", encoding="Latin-1")
 idx = tracks_df.columns.get_loc("track_title")
 tracks_df = tracks_df.iloc[:, :53]
 print(tracks_df.head())
+
 #%%
 echonest_df = pd.read_csv(DATA_DIR + "echonest.csv", encoding="Latin-1", index_col=0, header=[0,1,2])
 print(echonest_df.head())
+
 #%%
 artist_df = pd.read_csv(DATA_DIR + "raw_artists.csv", encoding="Latin-1")
 print(artist_df.head())
+
 #%%
 album_df = pd.read_csv(DATA_DIR + "raw_albums.csv", encoding="Latin-1")
 print(album_df.head())
+
 #%%
 features_df = pd.read_csv(DATA_DIR + "features.csv", encoding="Latin-1", index_col=0, header=[0,1,2])
 print(features_df.head())
+
 #%%
 # Number of unique number of tracks, artists, albums, genres
 print('{} tracks, {} artists, {} albums, {} genres'.format(len(tracks_df), 
       len(artist_df['artist_id'].unique()), len(album_df), sum(genres_df['#tracks'] > 0)))
-#%%
-#track_cols = tracks_df.columns
-#percent_missing_tracks = tracks_df.isnull().sum()*100/len(tracks_df)
-#missing_value_tracks_df = pd.DataFrame({'ColName': track_cols,
-#                                        'percent_missing': percent_missing_tracks})
 
-def missing_values_plotter(x):
+#%%
+# Number of unique number of tracks, artists, albums, genres
+print('{} tracks, {} artists, {} albums, {} genres'.format(len(tracks_df), 
+      len(artist_df['artist_id'].unique()), len(album_df), sum(genres_df['#tracks'] > 0)))
+         
+#%%
+# Missing values in datasets
+def num_missing(x):
+    return sum(x.isnull())
+    i = sum(x.isnull())
+    return (i/len(x))*100
+
+print("Missing values per column: ")
+
+print("Tracks dataset: ")
+missing_track_info = tracks_df.apply(num_missing, axis = 0) 
+print(missing_track_info)
+print("\nGenres dataset: " )
+missing_genre_info = genres_df.apply(num_missing, axis = 0)
+print(missing_genre_info)
+print("\nEchonest dataset: " )
+missing_echo_info = echonest_df.apply(num_missing, axis = 0)
+print(missing_echo_info)
+print("\nFeatures dataset: " )
+missing_features_info = features_df.apply(num_missing, axis = 0)
+print(missing_features_info)
+
+#%%
+def missing_values_plotter(x, fileName):
     track_cols = x.columns
     percent_missing_tracks = x.isnull().sum()*100/len(x)
-    missing_value_df = pd.DataFrame({'ColName': track_cols,
-                                            'percent_missing': percent_missing_tracks})
+    missing_value_df = pd.DataFrame({'ColName': track_cols, 
+                                     'percent_missing': percent_missing_tracks})
+    fig, ax = plt.subplots()
+    fig.set_size_inches(15, 17)
     g = sns.barplot(missing_value_df[missing_value_df['percent_missing'] > 0]['ColName'], 
-                missing_value_df[missing_value_df['percent_missing'] > 0]['percent_missing'])
+                missing_value_df[missing_value_df['percent_missing'] > 0]['percent_missing'],
+                ax=ax)
 
     for item in g.get_xticklabels():
         item.set_rotation(90)
     
+    g.figure.savefig(IMG_DIR + fileName)
+    
+    # Columns to keep in datasets
+    to_keep = list(missing_value_df[missing_value_df['percent_missing'] < 30]['ColName'])
+    return to_keep
 
-missing_values_plotter(tracks_df)
-      
+tracks_df = tracks_df[missing_values_plotter(tracks_df, "missingValTracksDataSet.png")]
+album_df = album_df[missing_values_plotter(album_df, "missingValAlbumsDataSet.png")]
+artist_df = artist_df[missing_values_plotter(artist_df, "missingValArtistsDataSet.png")]
 #%%
+
