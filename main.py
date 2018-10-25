@@ -7,8 +7,8 @@ import seaborn as sns
 
 sns.set()
 
-DATA_DIR = os.getcwd() + "/Desktop/Projects/CS543-MusicGenreRecognition/Data/fma_metadata/"
-IMG_DIR = os.getcwd() + "/Desktop/Projects/CS543-MusicGenreRecognition/Images/"
+DATA_DIR = "/home/vedantc6/Desktop/Projects/CS543-MusicGenreRecognition/Data/fma_metadata/"
+IMG_DIR = "/home/vedantc6/Desktop/Projects/CS543-MusicGenreRecognition/Images/"
 
 #%%
 genres_df = pd.read_csv(DATA_DIR + "genres.csv", encoding="latin-1") 
@@ -43,11 +43,6 @@ print(features_df.head())
 ############# EDA ###############
 #################################
 
-# Number of unique number of tracks, artists, albums, genres
-print('{} tracks, {} artists, {} albums, {} genres'.format(len(tracks_df), 
-      len(artist_df['artist_id'].unique()), len(album_df), sum(genres_df['#tracks'] > 0)))
-
-#%%
 # Number of unique number of tracks, artists, albums, genres
 print('{} tracks, {} artists, {} albums, {} genres'.format(len(tracks_df), 
       len(artist_df['artist_id'].unique()), len(album_df), sum(genres_df['#tracks'] > 0)))
@@ -131,6 +126,6 @@ test = test[(test.track_duration > 0) & (test.track_duration < 1000)]
 test['track_duration'] = test.track_duration
 print("Mean duration of tracks present in the dataset: {} seconds".format(test.track_duration.mean()))
 
-g = sns.distplot(test.track_duration)
+g = sns.countplot(test.track_duration).set_title("Counts of tracks plotted with their duration")
 g.figure.savefig(IMG_DIR + "trackDuration.png")
 #%%
