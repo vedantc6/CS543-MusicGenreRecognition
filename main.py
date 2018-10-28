@@ -88,15 +88,16 @@ def missing_values_plotter(x, fileName):
     for item in g.get_xticklabels():
         item.set_rotation(90)
     
+    g.set_title(fileName.split(".")[0])
     g.figure.savefig(IMG_DIR + fileName)
     
     # Columns to keep in datasets
     to_keep = list(missing_value_df[missing_value_df['percent_missing'] < 30]['ColName'])
     return to_keep
 
-tracks_df = tracks_df[missing_values_plotter(tracks_df, "missingValTracksDataSet.png")]
-album_df = album_df[missing_values_plotter(album_df, "missingValAlbumsDataSet.png")]
-artist_df = artist_df[missing_values_plotter(artist_df, "missingValArtistsDataSet.png")]
+tracks_df = tracks_df[missing_values_plotter(tracks_df, "Missing_Values_Tracks_Data.png")]
+album_df = album_df[missing_values_plotter(album_df, "Missing_Values_Albums_Data.png")]
+artist_df = artist_df[missing_values_plotter(artist_df, "Missing_Values_Artists_Data.png")]
 #%%
 # Count of albums vs release years
 album_df["Year"] = album_df['album_date_created'].str.split("/").str[2].str.split(" ").str[0]
