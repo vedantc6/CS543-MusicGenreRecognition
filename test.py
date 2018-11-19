@@ -9,14 +9,11 @@ Created on Tue Nov 13 23:10:56 2018
 import os
 import pandas as pd
 import ast
-import librosa
-import librosa.display
-import matplotlib.pyplot as plt
+from pickle import dump
 import numpy as np
+from common import METADATA_DIR, AUDIO_DIR, DATA_DIR, TRACK_COUNT, load_track
+from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 
-METADATA_DIR = "/home/vedantc6/Desktop/Projects/CS543-MusicGenreRecognition/Data/fma_metadata/"
-AUDIO_DIR = "/home/vedantc6/Desktop/Projects/CS543-MusicGenreRecognition/Data/fma_small/"
-DATA_DIR = "/home/vedantc6/Desktop/Projects/CS543-MusicGenreRecognition/Data/"
 #%%
 def cleanTracksData(filename):
     tracks = pd.read_csv(filename, index_col = 0, header=[0, 1])
@@ -42,7 +39,7 @@ def cleanTracksData(filename):
     
     return tracks
 #%%
-genres = pd.read_csv(METADATA_DIR + "genres.csv", index_col = 0) 
+genres_data = pd.read_csv(METADATA_DIR + "genres.csv", index_col = 0) 
 tracks = cleanTracksData(METADATA_DIR + "tracks2.csv")
 #%%
 # Input - tracks and genres dataset
@@ -54,19 +51,21 @@ def validGenres(tracks, genres):
     
     return list(d.index)
 #%%
-validGenres = validGenres(tracks, genres)
-#%%
-# USING LIBROSA EXAMPLE
-y, sr = librosa.load(AUDIO_DIR + "001/001039.mp3", duration=0.1)
+# Valid genres present in the subset "small". Total 8 in number
+# One Hot Encoding done and stored in a dictionary
+GENRES = validGenres(tracks, genres_data)
+GENRES = sorted(GENRES)
+genresDict = {}
 
-S = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=128)
+labelEncoded = LabelEncoder().fit_transform(GENRES)
+labelEncoded = labelEncoded.reshape(len(labelEncoded), 1)
+oneHotEncoder = OneHotEncoder(sparse=False)
+oneHotEncoded = oneHotEncoder.fit_transform(labelEncoded)
 
-plt.figure(figsize=(10, 4))
-librosa.display.specshow(librosa.power_to_db(S, ref=np.max), y_axis='mel', x_axis='time')
-plt.colorbar(format='%+2.0f dB')
-plt.title('Mel spectrogram')
-plt.tight_layout()
+for i, genre in enumerate(GENRES):
+    genresDict[genre] = np.array(oneHotEncoded[i])
 
+del i, genre
 #%%
 # Input - Audio directory and tracks dataset
 # Return - a list [track_number, track_path, track_genre]
@@ -91,19 +90,34 @@ def getTrackIDs(aud_dir, tracks):
 trackIDs = getTrackIDs(AUDIO_DIR, tracks)
 
 #%%
+# Input - Audio file
+# Return - Shape of a melspectrogram
+# To try - Find out different values of shapes, take median as the default shape 
+def getDefaultShape():
+    tempFeatures, _ = load_track(AUDIO_DIR + "009/009152.mp3")
+    return tempFeatures.shape
+
 # Input - Main directory, tracks dataset
 # Return - Pickled data
-def createDataStructure(data_dir, track):
-    categ_dir = data_dir + "Categorized/"
-    if not os.path.exists(categ_dir):
-        os.makedirs(categ_dir)
-      
-    for genre in validGenres: 
-        g = categ_dir + genre
-        if not os.path.exists(g):
-            os.makedirs(g)
+def createDataStructure(data_dir, trackList):
+    defaultShape = getDefaultShape()
     
-    for t in track:
+#    np.zeros makes 8000 lists which have rows and columns shaped according to defaultShape
+    X = np.zeros((TRACK_COUNT,) + defaultShape, dtype=np.float32)
+    y = np.zeros((TRACK_COUNT, len(GENRES)), dtype=np.float32)
+    track_paths = {}
+#    print(X.shape, y.shape)
+    
+    for i, track in enumerate(trackList[:5]):
+        path = track[1] + "/" + str(track[0]) + ".mp3"
+        X[i], _ = load_track(path, defaultShape)
+        y[i] = genresDict[track[2]]
+        track_paths[track[0]] = path
+        
+    return (X, y, track_paths)
         
 
-createDataStructure(DATA_DIR, trackIDs)
+(X, y, track_paths) = createDataStructure(DATA_DIR, trackIDs)
+data = {'X': X, 'y': y, 'track_paths': track_paths}
+with open(DATA_DIR + "data.pkl", 'wb') as f:
+    dump(data, f)
