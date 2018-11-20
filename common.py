@@ -13,6 +13,9 @@ AUDIO_DIR = "/home/vedantc6/Desktop/Projects/CS543-MusicGenreRecognition/Data/fm
 DATA_DIR = "/home/vedantc6/Desktop/Projects/CS543-MusicGenreRecognition/Data/"
 MAIN_DIR = "/home/vedantc6/Desktop/Projects/CS543-MusicGenreRecognition/"
 
+GENRES = ['Electronic', 'Experimental', 'Folk', 'Hip-Hop', 'Instrumental', 
+          'International', 'Pop', 'Rock']
+
 # Some hard-coded variables, which can be adjusted as per requirement
 TRACK_COUNT = 8000
 WINDOW_SIZE = 2048

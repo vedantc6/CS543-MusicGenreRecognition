@@ -11,7 +11,7 @@ import pandas as pd
 import ast
 from pickle import dump
 import numpy as np
-from common import METADATA_DIR, AUDIO_DIR, DATA_DIR, TRACK_COUNT, load_track
+from common import METADATA_DIR, AUDIO_DIR, DATA_DIR, TRACK_COUNT, GENRES, load_track
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 
 #%%
@@ -42,19 +42,21 @@ def cleanTracksData(filename):
 genres_data = pd.read_csv(METADATA_DIR + "genres.csv", index_col = 0) 
 tracks = cleanTracksData(METADATA_DIR + "tracks2.csv")
 #%%
-# Input - tracks and genres dataset
-# Return - list of genres to be predicted (present in small subset of data)
-def validGenres(tracks, genres):
-    subset = tracks['set', 'subset'] <= "small"
-    d = genres.reset_index().set_index('title')
-    d = d.loc[tracks.loc[subset, ('track', 'genre_top')].unique()]
-    
-    return list(d.index)
-#%%
+# HARD-CODED THE GENRES TO COMMONS.PY FOR EASY USAGE
+## Input - tracks and genres dataset
+## Return - list of genres to be predicted (present in small subset of data)
+#def validGenres(tracks, genres):
+#    subset = tracks['set', 'subset'] <= "small"
+#    d = genres.reset_index().set_index('title')
+#    d = d.loc[tracks.loc[subset, ('track', 'genre_top')].unique()]
+#    
+#    return list(d.index)
+
 # Valid genres present in the subset "small". Total 8 in number
 # One Hot Encoding done and stored in a dictionary
-GENRES = validGenres(tracks, genres_data)
-GENRES = sorted(GENRES)
+#GENRES = validGenres(tracks, genres_data)
+#GENRES = sorted(GENRES)
+#%%
 genresDict = {}
 
 labelEncoded = LabelEncoder().fit_transform(GENRES)
