@@ -13,6 +13,7 @@ from pickle import dump
 import numpy as np
 from common import METADATA_DIR, AUDIO_DIR, DATA_DIR, TRACK_COUNT, GENRES, load_track
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
+from tqdm import tqdm
 
 #%%
 def cleanTracksData(filename):
@@ -83,8 +84,8 @@ def getTrackIDs(aud_dir, tracks):
     for root, dirnames, files in os.walk(aud_dir):
         if dirnames == []:
             for file in files:
-                f = int(file[:-4])
-                g = list(trackGenres[trackGenres['track_id'] == f]['Genre'])
+                f = file[:-4]
+                g = list(trackGenres[trackGenres['track_id'] == int(f)]['Genre'])
                 track_ids.append((f,root,g[0]))
              
     return track_ids
@@ -104,22 +105,31 @@ def getDefaultShape():
 def createDataStructure(data_dir, trackList):
     defaultShape = getDefaultShape()
     
-#    np.zeros makes 8000 lists which have rows and columns shaped according to defaultShape
-    X = np.zeros((TRACK_COUNT,) + defaultShape, dtype=np.float32)
-    y = np.zeros((TRACK_COUNT, len(GENRES)), dtype=np.float32)
-    track_paths = {}
-#    print(X.shape, y.shape)
+    trackList = np.array_split(np.array(trackList), 16)
     
-    for i, track in enumerate(trackList[:5]):
-        path = track[1] + "/" + str(track[0]) + ".mp3"
-        X[i], _ = load_track(path, defaultShape)
-        y[i] = genresDict[track[2]]
-        track_paths[track[0]] = path
+    for i in tqdm(range(len(trackList))):
+      temp = trackList[i].tolist()
+      T_COUNT = len(temp)
+      
+#    np.zeros makes 500 lists which have rows and columns shaped according to defaultShape
+      X = np.zeros((T_COUNT,) + defaultShape, dtype=np.float32)
+      y = np.zeros((T_COUNT, len(GENRES)), dtype=np.float32)
+      track_paths = {}
+#       print(X.shape, y.shape)
+      
+      for j, track in enumerate(temp):
+        try:
+          path = track[1] + "/" + str(track[0]) + ".mp3"
+          if j % 100 == 0:
+            print(path)
+          X[j], _ = load_track(path, defaultShape)
+          y[j] = genresDict[track[2]]
+          track_paths[track[0]] = path
+        except:
+          pass
         
-    return (X, y, track_paths)
-        
+      data = {'X': X, 'y': y, 'track_paths': track_paths}
+      with open(MAIN_DIR + "data" + str(i) + ".pkl", 'wb') as f:
+          dump(data, f)       
 
-(X, y, track_paths) = createDataStructure(DATA_DIR, trackIDs)
-data = {'X': X, 'y': y, 'track_paths': track_paths}
-with open(DATA_DIR + "data.pkl", 'wb') as f:
-    dump(data, f)
+createDataStructure(DATA_DIR, trackIDs)
