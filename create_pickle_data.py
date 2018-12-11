@@ -6,7 +6,17 @@ Created on Tue Nov 13 23:10:56 2018
 @author: Vedant Choudhary and Aditya Vyas
 @affiliation: Rutgers University, New Brunswick
 """
-#%%
+
+####################################################################
+#################### create_pickle_data.py #########################
+###  create_pickle_data.py creates pickle data which will be     ### 
+###  loaded to be provided as input and output value for the     ###
+###  CRNN model. Pickle basically serializes the data in binary  ###
+###  format, saving up on space.                                 ###
+####################################################################
+####################################################################
+
+# Importing the required libraries for operations in the code
 import os
 import pandas as pd
 import ast
@@ -18,6 +28,12 @@ from tqdm import tqdm
 import util
 import csv
 
+
+# The tracks data is cleaned and correctly organized. This dataset will have multi-class labels.
+# So, in order to access suppose two columns such as track and it's top_genre, you will have to
+# use multilabels like tracks['track', 'genre_top']
+# Input - filename which is the destination to where tracks.csv is stored
+# Return - cleaned up tracks dataset
 def cleanTracksData(filename):
     tracks = pd.read_csv(filename, index_col = 0, header=[0, 1])
 
@@ -42,9 +58,10 @@ def cleanTracksData(filename):
 
     return tracks
 
-# HARD-CODED THE GENRES TO COMMONS.PY FOR EASY USAGE
-## Input - tracks and genres dataset
-## Return - list of genres to be predicted (present in small subset of data)
+# HARD-CODED THE GENRES TO COMMONS.PY FOR EASY USAGE, if someone decides to use some other
+# dataset of fma, they can use this function to retrieve genres. Change small to medium/large
+# Input - tracks and genres dataset
+# Return - list of genres to be predicted (present in small subset of data)
 #def validGenres(tracks, genres):
 #    subset = tracks['set', 'subset'] <= "small"
 #    d = genres.reset_index().set_index('title')
@@ -57,6 +74,8 @@ def cleanTracksData(filename):
 #GENRES = validGenres(tracks, genres_data)
 #GENRES = sorted(GENRES)
 
+# This function gets all the tracks present in fma_small dataset by traversing through it,
+# along with its genres.
 # Input - Audio directory and tracks dataset
 # Return - a list [track_number, track_path, track_genre]
 def getTrackIDs(aud_dir, tracks):
@@ -84,12 +103,14 @@ def getDefaultShape():
     tempFeatures, _ = load_track(AUDIO_DIR + "009/009152.mp3")
     return tempFeatures.shape
 
+# Here, multiple pickles are created which puts less strain on the computer memory than a single
+# large pickle data creation. We have divided into 16 pickle files, each has 500 tracks
 # Input - Main directory, tracks dataset
 # Return - Pickled data
-def createDataStructure(data_dir, trackList):
+def createMultiplePickles(data_dir, trackList):
     defaultShape = getDefaultShape()
 
-    # Computationally expensive
+    # Computationally expensive, our hardware stops working while running this part
     # X1 = np.zeros((TRACK_COUNT,) + defaultShape, dtype=np.float32)
     # Y1 = np.zeros((TRACK_COUNT, len(GENRES)), dtype=np.float32)
     # track_paths = {}
@@ -99,25 +120,26 @@ def createDataStructure(data_dir, trackList):
     #     X1[i], _ = load_track()
     #     Y1[j] = genresDict[track[2]]
     #     track_paths[track[0]] = path
+    
     trackList = np.array_split(np.array(trackList), 16)
     for i in tqdm(range(len(trackList))):
         temp = trackList[i].tolist()
         T_COUNT = len(temp)
 
-        #    np.zeros makes 500 lists which have rows and columns shaped according to defaultShape
+        # np.zeros makes 500 lists which have rows and columns shaped according to defaultShape
         X = np.zeros((T_COUNT,) + defaultShape, dtype=np.float32)
         y = np.zeros((T_COUNT, len(GENRES)), dtype=np.float32)
         track_paths = {}
-        #       print(X.shape, y.shape)
+        # print(X.shape, y.shape)
 
         for j, track in enumerate(temp):
             try:
                 path = track[1] + "/" + str(track[0]) + ".mp3"
-                if j % 100 == 0:
-                    print(path)
-                    X[j], _ = load_track(path, defaultShape)
-                    y[j] = genresDict[track[2]]
-                    track_paths[track[0]] = path
+#                if j % 100 == 0:
+#                    print(path)
+                X[j], _ = load_track(path, defaultShape)
+                y[j] = genresDict[track[2]]
+                track_paths[track[0]] = path
                 except:
                     pass
 
@@ -125,6 +147,8 @@ def createDataStructure(data_dir, trackList):
         with open(PICKLE_DIR + "data" + str(i) + ".pkl", 'wb') as f:
             dump(data, f)
 
+# Combining all the 16 pickle data files to one pickle. Whenever our hardware takes too much 
+# time to compute something, we run the same code on Google Colab.
 def combinedPickle():
     pickle_files = []
     for (dirpath, dirnames, filenames) in os.walk(PICKLE_DIR):
@@ -152,6 +176,7 @@ if __name__ == "__main__":
     tracks = cleanTracksData(METADATA_DIR + "tracks2.csv")
     genresDict = {}
 
+    # One hot encoding genre list, which is our output
     labelEncoded = LabelEncoder().fit_transform(GENRES)
     labelEncoded = labelEncoded.reshape(len(labelEncoded), 1)
     oneHotEncoder = OneHotEncoder(sparse=False)
@@ -164,5 +189,5 @@ if __name__ == "__main__":
     # text file made to do some quality control test on excel
     np.savetxt(MAIN_DIR + "trackIDs.csv", trackIDs, delimiter=",", fmt='%s')
 
-    createDataStructure(DATA_DIR, trackIDs)
+    createMultiplePickles(DATA_DIR, trackIDs)
     combinedPickle()

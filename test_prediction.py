@@ -1,33 +1,32 @@
-import librosa as lbr
-from tensorflow.python.keras.models import Model, load_model
-import os
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Nov 19 17:22:16 2018
 
-def prediction(model_path, output_path):
+@author: Vedant Choudhary and Aditya Vyas
+@affiliation: Rutgers University, New Brunswick
+"""
+
+####################################################################
+###################### test_prediction.py ##########################
+###  test_prediction.py is kind of a utility code written just   ###
+###  to check the prediction values of any song.                 ###
+####################################################################
+####################################################################
+
+# Importing the required libraries for operations in the code
+from tensorflow.python.keras.models import load_model
+from util import AUDIO_DIR, MODEL_DIR, load_track
+from create_pickle_data import getDefaultShape
+
+# Loads the model to predict
+def prediction(model_path):
     model = load_model(model_path)
     return model
 
-def getDefaultShape():
-    tempFeatures, _ = load_track(AUDIO_DIR + "009/009152.mp3")
-    return tempFeatures.shape
-
-def load_track(filename, forceShape=None):
-    sample_input, sample_rate = lbr.load(filename, mono=True)
-    features = lbr.feature.melspectrogram(sample_input, **MEL_KWARGS).T
-    print(features.shape)
-    if forceShape is not None:
-        if features.shape[0] < forceShape[0]:
-            delta_shape = (forceShape[0] - features.shape[0], forceShape[1])
-            features = np.append(features, np.zeros(delta_shape), axis=0)
-        elif features.shape[0] > forceShape[0]:
-            features = features[: forceShape[0], :]
-
-    features[features == 0] = 1e-6
-
-    return (np.log(features), float(sample_input.shape[0]) / sample_rate)
-
 if __name__ == "__main__":
-    model_path = os.path.join(os.path.dirname(__file__), 'Models/model_cnn50_relu.h5')
-    audio_dir = os.path.join(os.path.dirname(__file__), "/Data/fma_small/")
-    defaultShape = getDefaultShape(audio_dir + "009/009152.mp3")
-    test_x, _ = load_track(audio_dir + "003/003270.mp3")
-    print(test_x)
+    model_path = MODEL_DIR + 'model_cnn50_relu.h5'
+    defaultShape = getDefaultShape()
+    test_x, _ = load_track(AUDIO_DIR + "003/003270.mp3")
+    model = prediction(model_path)
+    model.predict(test_x)

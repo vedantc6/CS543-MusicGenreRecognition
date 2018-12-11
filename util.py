@@ -6,19 +6,29 @@ Created on Sun Nov 18 23:12:12 2018
 @author: Vedant Choudhary and Aditya Vyas
 @affiliation: Rutgers University, New Brunswick
 """
+
+####################################################################
+########################## util.py #################################
+###  util.py is a utility program that stores some global        ###
+###  variables and functions used quite often in other programs  ###
+####################################################################
+####################################################################
+
+# Importing the required libraries for operations in the code
 import numpy as np
 import librosa as lbr
-import librosa.display
 import matplotlib.pyplot as plt
 import os
 
+# Global variables which link to directory paths.
 MAIN_DIR = os.path.dirname(os.path.abspath(__file__))
 METADATA_DIR = MAIN_DIR + "/Data/fma_metadata/"
 AUDIO_DIR = MAIN_DIR + "/Data/fma_small/"
 DATA_DIR = MAIN_DIR + "/Data/"
 PICKLE_DIR = MAIN_DIR + "/PickleData/"
 MODEL_DIR = MAIN_DIR + "/Models/"
-
+JS_STATIC_DIR = MAIN_DIR + "/static/model"
+# Genres which the program will try to recognize. These are the genres present in fma_small dataset
 GENRES = ['Electronic', 'Experimental', 'Folk', 'Hip-Hop', 'Instrumental',
           'International', 'Pop', 'Rock']
 
@@ -33,12 +43,12 @@ MEL_KWARGS = {
     'n_mels': N_MELS
 }
 
-# Input - Filename and forceShape (to bring uniformity to the feature shape)
-# To try - Spectrograms of a song divided by some duration, sliding window types
+# Input - Filename and forceShape (to bring uniformity to the spectrograms)
+# Return - A numpy array denoting values of the spectrogram
 def load_track(filename, forceShape=None):
     sample_input, sample_rate = lbr.load(filename, mono=True)
     features = lbr.feature.melspectrogram(sample_input, **MEL_KWARGS).T
-    print(features.shape)
+#    print(features.shape)
     if forceShape is not None:
         if features.shape[0] < forceShape[0]:
             delta_shape = (forceShape[0] - features.shape[0], forceShape[1])
@@ -50,11 +60,11 @@ def load_track(filename, forceShape=None):
 
     return (np.log(features), float(sample_input.shape[0]) / sample_rate)
 
-# if __name__ == "__main__":
-#     # USING LIBROSA EXAMPLE
-#     y, sr = load_track(AUDIO_DIR + "000/000002.mp3")
-#     plt.figure(figsize=(10, 4))
-#     lbr.display.specshow(y, y_axis='mel', x_axis='time')
-#     plt.colorbar(format='%+2.0f dB')
-#     plt.title('Mel spectrogram')
-#     plt.tight_layout()
+if __name__ == "__main__":
+    # USING LIBROSA EXAMPLE
+    y, sr = load_track(AUDIO_DIR + "003/003270.mp3")
+    plt.figure(figsize=(10, 4))
+    lbr.display.specshow(y, y_axis='mel', x_axis='time')
+    plt.colorbar(format='%+2.0f dB')
+    plt.title('Mel spectrogram')
+    plt.tight_layout()
