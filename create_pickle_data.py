@@ -9,7 +9,7 @@ Created on Tue Nov 13 23:10:56 2018
 
 ####################################################################
 #################### create_pickle_data.py #########################
-###  create_pickle_data.py creates pickle data which will be     ### 
+###  create_pickle_data.py creates pickle data which will be     ###
 ###  loaded to be provided as input and output value for the     ###
 ###  CRNN model. Pickle basically serializes the data in binary  ###
 ###  format, saving up on space.                                 ###
@@ -120,7 +120,7 @@ def createMultiplePickles(data_dir, trackList):
     #     X1[i], _ = load_track()
     #     Y1[j] = genresDict[track[2]]
     #     track_paths[track[0]] = path
-    
+
     trackList = np.array_split(np.array(trackList), 16)
     for i in tqdm(range(len(trackList))):
         temp = trackList[i].tolist()
@@ -147,7 +147,7 @@ def createMultiplePickles(data_dir, trackList):
         with open(PICKLE_DIR + "data" + str(i) + ".pkl", 'wb') as f:
             dump(data, f)
 
-# Combining all the 16 pickle data files to one pickle. Whenever our hardware takes too much 
+# Combining all the 16 pickle data files to one pickle. Whenever our hardware takes too much
 # time to compute something, we run the same code on Google Colab.
 def combinedPickle():
     pickle_files = []
@@ -189,5 +189,11 @@ if __name__ == "__main__":
     # text file made to do some quality control test on excel
     np.savetxt(MAIN_DIR + "trackIDs.csv", trackIDs, delimiter=",", fmt='%s')
 
+    if not os.path.exists(PICKLE_DIR):
+        try:
+            os.makedirs(PICKLE_DIR)
+        except:
+            pass
+            
     createMultiplePickles(DATA_DIR, trackIDs)
     combinedPickle()
