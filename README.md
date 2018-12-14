@@ -4,8 +4,10 @@ and Retrieval.
 Maintain the following structure to implement the project from scratch. (Files to be added to data folder)
 
 /Data
-  /fma_metadata
-  /fma_small
+
+/Data/fma_metadata
+
+/Data/fma_small
 
 Description of the following files:
 
