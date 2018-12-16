@@ -9,7 +9,7 @@ Created on Mon Nov 19 17:22:16 2018
 
 ####################################################################
 ######################## train_model.py ############################
-###  train_model.py consists the model architecture for our      ### 
+###  train_model.py consists the model architecture for our      ###
 ###  program. Various other architectures were tried, but for    ###
 ###  clarity, only the best model is shown in the code. The      ###
 ###  documentation for our project will give a more expansive    ###
@@ -27,7 +27,7 @@ from tensorflow.python.keras.optimizers import Adam
 from tensorflow.python.keras import backend as K
 from tensorflow.python.keras.layers import Input, Conv1D, MaxPooling1D, Activation, Dropout, \
         BatchNormalization, Dense, Lambda, TimeDistributed
-        
+
 # Parameters for the model are specified as global variables
 EPOCHS = 50
 SEED = 42
@@ -60,7 +60,7 @@ def trainModel(data, model_path):
         layer = BatchNormalization(momentum=0.9)(layer)
         layer = Activation('relu')(layer)
         layer = MaxPooling1D(2)(layer)
-        layer = Dropout(0.5)(layer)
+        # layer = Dropout(0.5)(layer)
 
     layer = TimeDistributed(Dense(len(GENRES)))(layer)
     time_distributed_merge_layer = Lambda(
